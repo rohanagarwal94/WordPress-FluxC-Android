@@ -11,12 +11,13 @@ import org.wordpress.android.stores.action.Action;
 import org.wordpress.android.stores.action.AuthenticationAction;
 import org.wordpress.android.stores.action.IAction;
 import org.wordpress.android.stores.model.AccountModel;
+import org.wordpress.android.stores.model.AccountSettingsModel;
 import org.wordpress.android.stores.network.AuthError;
 import org.wordpress.android.stores.network.rest.wpcom.account.AccountRestClient;
 import org.wordpress.android.stores.network.rest.wpcom.auth.AccessToken;
 import org.wordpress.android.stores.network.rest.wpcom.auth.Authenticator;
 import org.wordpress.android.stores.network.rest.wpcom.auth.Authenticator.Token;
-import org.wordpress.android.stores.persistence.UpdateAllExceptId;
+import org.wordpress.android.stores.persistence.AccountSqlUtils;
 import org.wordpress.android.util.AppLog;
 import org.wordpress.android.util.AppLog.T;
 
@@ -50,6 +51,8 @@ public class AccountStore extends Store {
     private Authenticator mAuthenticator;
 
     private AccountModel mAccount;
+    private AccountModel mFetchedAccount;
+    private AccountSettingsModel mFetchedSettings;
     private AccessToken mAccessToken;
 
     @Inject
@@ -60,6 +63,8 @@ public class AccountStore extends Store {
         mAccountRestClient = accountRestClient;
         mAccount = loadAccount();
         mAccessToken = accessToken;
+        mFetchedAccount = null;
+        mFetchedSettings = null;
     }
 
     @Override
@@ -84,7 +89,15 @@ public class AccountStore extends Store {
             AuthenticatePayload payload = (AuthenticatePayload) action.getPayload();
             authenticate(payload.username, payload.password, payload);
         } else if (actionType == AccountAction.FETCH) {
-            mAccountRestClient.getMe();
+            // prevent multiple in-progress fetches
+            if (mFetchedAccount == null && mFetchedSettings == null) {
+                mAccountRestClient.getMe();
+                mAccountRestClient.getMySettings();
+            }
+        } else if (actionType == AccountAction.FETCHED) {
+            accountFecthed((AccountModel) action.getPayload());
+        } else if (actionType == AccountAction.FETCHED_SETTINGS) {
+            accountSettingsFetched((AccountSettingsModel) action.getPayload());
         } else if (actionType == AccountAction.UPDATE) {
             AccountModel accountModel = (AccountModel) action.getPayload();
             update(accountModel);
@@ -105,17 +118,8 @@ public class AccountStore extends Store {
     private void update(AccountModel accountModel) {
         // Update memory instance
         mAccount = accountModel;
-        // Update DB
-        List<AccountModel> accountResults = WellSql.selectUnique(AccountModel.class).getAsModel();
-        if (accountResults.isEmpty()) {
-            // insert
-            WellSql.insert(accountModel).execute();
-        } else {
-            // update
-            int oldId = accountResults.get(0).getId();
-            WellSql.update(AccountModel.class).whereId(oldId)
-                    .put(accountModel, new UpdateAllExceptId<AccountModel>()).execute();
-        }
+
+        AccountSqlUtils.insertOrUpdateAccount(accountModel);
     }
 
     private AccountModel loadAccount() {
@@ -146,5 +150,28 @@ public class AccountStore extends Store {
                 emitChange(event);
             }
         });
+    }
+
+    private void accountFecthed(AccountModel accountModel) {
+        mFetchedAccount = accountModel;
+        AccountSqlUtils.insertOrUpdateAccount(accountModel);
+        checkFetchedState();
+    }
+
+    private void accountSettingsFetched(AccountSettingsModel settingsModel) {
+        mFetchedSettings = settingsModel;
+        AccountSqlUtils.insertOrUpdateAccountSettings(settingsModel);
+        checkFetchedState();
+    }
+
+    private void checkFetchedState() {
+        if (mFetchedAccount != null && mFetchedSettings != null) {
+            if (mFetchedAccount.getPrimaryBlogId() == mFetchedSettings.getPrimarySiteId()) {
+                mFetchedAccount.setSettingsId(mFetchedSettings.getId());
+                mDispatcher.dispatch(AccountAction.UPDATE, mFetchedAccount);
+            }
+            mFetchedSettings = null;
+            mFetchedAccount = null;
+        }
     }
 }

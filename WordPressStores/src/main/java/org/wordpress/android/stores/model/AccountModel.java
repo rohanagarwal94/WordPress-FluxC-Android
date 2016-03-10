@@ -20,6 +20,7 @@ public class AccountModel implements Identifiable, Payload {
     @Column private int mSiteCount;
     @Column private int mVisibleSiteCount;
     @Column private String mEmail;
+    @Column private long mSettingsId;
 
     public AccountModel() {
         init();
@@ -45,6 +46,7 @@ public class AccountModel implements Identifiable, Payload {
         mSiteCount = 0;
         mVisibleSiteCount = 0;
         mEmail = "";
+        mSettingsId = -1;
     }
 
     public long getUserId() {
@@ -117,5 +119,13 @@ public class AccountModel implements Identifiable, Payload {
 
     public String getEmail() {
         return mEmail;
+    }
+
+    public void setSettingsId(long settingsId) {
+        mSettingsId = settingsId;
+    }
+
+    public long getSettingsId() {
+        return mSettingsId;
     }
 }
