@@ -247,6 +247,7 @@ public class MediaRestClient extends BaseWPComRestClient implements ProgressList
                 } else {
                     AppLog.w(T.MEDIA, "error uploading media: " + response);
                     MediaStore.MediaError error = new MediaError(MediaErrorType.fromHttpStatusCode(response.code()));
+                    error.message = response.message();
                     notifyMediaUploaded(media, error);
                 }
             }
