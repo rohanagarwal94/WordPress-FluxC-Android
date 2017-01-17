@@ -32,6 +32,7 @@ import org.wordpress.android.fluxc.store.SiteStore.NewSiteError;
 import org.wordpress.android.fluxc.store.SiteStore.NewSiteErrorType;
 import org.wordpress.android.fluxc.store.SiteStore.SiteVisibility;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -111,7 +112,7 @@ public class SiteRestClient extends BaseWPComRestClient {
     }
 
     public void checkUrlIsWPCom(@NonNull final String testedUrl) {
-        String url = WPCOMREST.sites.getUrlV1_1() + testedUrl;
+        String url = WPCOMREST.sites.getUrlV1_1() + URI.create(testedUrl).getHost();
         final WPComGsonRequest<SiteWPComRestResponse> request = WPComGsonRequest.buildGetRequest(url, null,
                 SiteWPComRestResponse.class,
                 new Listener<SiteWPComRestResponse>() {
