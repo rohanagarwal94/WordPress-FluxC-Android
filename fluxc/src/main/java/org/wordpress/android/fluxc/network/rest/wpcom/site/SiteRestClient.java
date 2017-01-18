@@ -112,7 +112,8 @@ public class SiteRestClient extends BaseWPComRestClient {
     }
 
     public void checkUrlIsWPCom(@NonNull final String testedUrl) {
-        String url = WPCOMREST.sites.getUrlV1_1() + URI.create(testedUrl).getHost();
+        URI uri = URI.create(testedUrl);
+        String url = WPCOMREST.sites.getUrlV1_1() + (uri.getAuthority() == null ? testedUrl : uri.getAuthority());
         final WPComGsonRequest<SiteWPComRestResponse> request = WPComGsonRequest.buildGetRequest(url, null,
                 SiteWPComRestResponse.class,
                 new Listener<SiteWPComRestResponse>() {
