@@ -41,6 +41,8 @@ public class SiteUtils {
         example.setIsJetpackInstalled(true);
         example.setIsJetpackConnected(true);
         example.setIsVisible(true);
+        example.setUsername("ponyuser");
+        example.setPassword("ponypass");
         example.setXmlRpcUrl("http://jetpack.url/xmlrpc.php");
         return example;
     }

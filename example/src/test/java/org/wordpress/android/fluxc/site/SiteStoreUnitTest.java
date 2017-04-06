@@ -596,4 +596,32 @@ public class SiteStoreUnitTest {
         }
         assertTrue(duplicate);
     }
+
+    @Test
+    public void testJetpackSelfHostedAndForceXMLRPC() {
+        SiteModel jetpackSite = generateJetpackSiteOverXMLRPC();
+        assertTrue(jetpackSite.isUsingWpComRestApi());
+
+        // Force the use of XMLRPC, client should check there is a username/password
+        jetpackSite.setIsXmlRpcUsageForced(true);
+        assertFalse(jetpackSite.isUsingWpComRestApi());
+    }
+
+    @Test
+    public void testDefaultUsageWpComRestApi() {
+        SiteModel wpComSite = generateWPComSite();
+        assertTrue(wpComSite.isUsingWpComRestApi());
+
+        SiteModel jetpack1 = generateJetpackSiteOverRestOnly();
+        assertTrue(jetpack1.isUsingWpComRestApi());
+
+        SiteModel jetpack2 = generateJetpackSiteOverXMLRPC();
+        assertTrue(jetpack1.isUsingWpComRestApi());
+
+        SiteModel pureSelfHosted1 = generateSelfHostedNonJPSite();
+        assertFalse(pureSelfHosted1.isUsingWpComRestApi());
+
+        SiteModel pureSelfHosted2 = generateSelfHostedSiteFutureJetpack();
+        assertFalse(pureSelfHosted2.isUsingWpComRestApi());
+    }
 }

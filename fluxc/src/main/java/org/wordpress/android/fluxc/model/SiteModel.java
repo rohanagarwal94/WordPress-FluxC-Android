@@ -49,6 +49,10 @@ public class SiteModel extends Payload implements Identifiable, Serializable {
     @Column private boolean mIsJetpackInstalled;
     // mIsJetpackConnected is true if Jetpack is installed, activated and connected to a WordPress.com account.
     @Column private boolean mIsJetpackConnected;
+    // mForceXmlRpcUsage is true, we will ignore mIsJetpackConnected and mIsJetpackInstalled and will
+    // use the XMLRPC API to communicate. Not, it never force XMLRPC usage for dotcom sites.
+    // This is a local parameter, it's never synced with the server.
+    @Column(name = "IS_XMLRPC_USAGE_FORCED") private boolean mIsXmlRpcUsageForced;
     @Column private boolean mIsAutomatedTransfer;
 
     // WPCom specifics
@@ -448,5 +452,17 @@ public class SiteModel extends Payload implements Identifiable, Serializable {
 
     public void setIsAutomatedTransfer(boolean automatedTransfer) {
         mIsAutomatedTransfer = automatedTransfer;
+    }
+
+    public boolean isXmlRpcUsageForced() {
+        return mIsXmlRpcUsageForced;
+    }
+
+    public void setIsXmlRpcUsageForced(boolean xmlRpcUsageForced) {
+        mIsXmlRpcUsageForced = xmlRpcUsageForced;
+    }
+
+    public boolean isUsingWpComRestApi() {
+        return isWPCom() || (isJetpackConnected() && !isXmlRpcUsageForced());
     }
 }
