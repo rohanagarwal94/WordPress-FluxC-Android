@@ -192,6 +192,9 @@ public class SiteSqlUtils {
                 .where().beginGroup()
                 .equals(SiteModelTable.IS_WPCOM, false)
                 .equals(SiteModelTable.IS_JETPACK_CONNECTED, false)
+                .endGroup()
+                .or().beginGroup()
+                .equals(SiteModelTable.IS_XMLRPC_USAGE_FORCED, true)
                 .endGroup().endWhere();
     }
 
